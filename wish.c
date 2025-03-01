@@ -212,16 +212,85 @@ void process_command(char **tokens, int parallel){
 }
 
 
-int main() {
-    char* line = NULL;  // user input
-    size_t len = 0;     // initial buffer size
-
-
-    // interactive mode loop
-    while (1) {
-        printf("wish> ");
-        __ssize_t read = getline(&line, &len, stdin);   // read user input
+int main(int argc, char *argv[]) {
+    if(argv > 2){
+        fprintf(stderr, "An error had occured\n");
+        exit(1);
     }
 
+    FILE *input_stream;
+    int batch_mode = 0
+
+    if(argc == 2){
+        // Batch Mode: Read commands from a file
+        input_stream = fopen(argv[1],"r");
+        if(input_stream == NULL){
+            fprintf(stderr, "An error had occured\n");
+            exit(1);
+        }
+        batch_mode = 1;
+    }
+    else{
+        // Interactive Mode: Read commands from stdin
+        input_stream = stdin;
+    }
+
+    intialize_deafult_path();
+
+    char *line = NULL;
+    size_t len = 0;
+
+    while(1){
+        if(!batch_mode){
+            // Print the prompt in interactive mode
+            printf("wish> ");
+            fflush(stdout);
+        }
+
+        // Read the line of input
+        ssize_t read = getline(&line, &len, input_stream);
+        if(read == -1){
+            break; // Exit EOF
+        }
+
+        // Parse the input line into tokens
+        char **tokens = parse_line(line);
+        if(tokens[0] == NULL){
+            free(tokens);
+            continue // Skip empty line
+        }
+
+        // Check for parallel commands (seperated by '&')
+        int parallel = 0;
+        for(int i = 0; tokens[i] != NULL, i++){
+            if(strcmp(tokens[i], "&") == 0){
+                parallel = 1;
+                tokens[i] = NULL; // Remove "&" from arguments
+                break;
+            }
+        }
+
+        if(parallel){
+            // Execute commands  in parallel
+            for(int i = 0; tokens[i] !- NULL; i++){
+                char **sub_tokens = parse_line(tokens[i]);
+                process_command(sub_tokens, 1); // Process each command in the background
+                free(sub_tokens);
+            }
+        }
+        else{
+            // Execute a single command
+            process_command(tokens, 0);
+        }
+
+        free(tokens); // Free memory allocated for tokens
+    }
+
+    free(line); // Free memory allocatedfor the input line
+    if(input_stream != stdin){
+        fclose(input_stream); // Close the batch file 
+    }
+
+    free_path_dirs() // Free memory allocated for the search file
     return 0;
 }
