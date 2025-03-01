@@ -1,0 +1,8 @@
+# batch.txt
+ls -la
+cd /tmp
+pwd
+path /bin /usr/bin
+ls
+invalid_command
+exit
