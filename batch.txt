@@ -1,6 +1,8 @@
 ls -la
 cd /tmp
 pwd
+path
+ls
 path /bin /usr/bin
 ls
 invalid_command

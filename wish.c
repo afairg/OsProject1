@@ -164,6 +164,9 @@ void process_command(char **tokens, int parallel) {
                     exit(1);
                 }
             }
+            for (int i = 0; i < num_path_dirs; i++) {
+                printf ("new path: %s\n", path_dirs[i]);
+            }
         }
     } else {
         // Handle external commands
