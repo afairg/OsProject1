@@ -1,8 +1,6 @@
-# batch.txt
-ls -la
-cd /tmp
-pwd
-path /bin /usr/bin
+path /bin /tmp/testdir
+testscript
 ls
-invalid_command
+path
+ls
 exit
