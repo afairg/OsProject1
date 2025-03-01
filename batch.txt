@@ -1,6 +1,7 @@
-path /bin /tmp/testdir
-testscript
+ls -la
+cd /tmp
+pwd
+path /bin /usr/bin
 ls
-path
-ls
+invalid_command
 exit
