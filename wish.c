@@ -113,8 +113,10 @@ void execute_external_command(char **args, int redirect, char *output_file) {
         fprintf(stderr, "An error has occurred\n"); // If execv fails
         exit(1);
     } else if (pid > 0) {
-        // Parent process waits for the child to finish
-        waitpid(pid, NULL, 0);
+        // Parent process waits for the child to finish (if not parallel)
+        if (!redirect) {
+            waitpid(pid, NULL, 0);
+        }
     } else {
         // Fork failed
         fprintf(stderr, "An error has occurred\n");
@@ -180,11 +182,8 @@ void process_command(char **tokens, int parallel) {
                 break;
             }
         }
-        if (!parallel) {
-            // Execute the command in the foreground
-            execute_external_command(tokens, redirect, output_file);
-        } else {
-            // Execute the command in the background
+        if (parallel) {
+            // Fork a child process for parallel execution
             pid_t pid = fork();
             if (pid == 0) {
                 execute_external_command(tokens, redirect, output_file);
@@ -192,6 +191,9 @@ void process_command(char **tokens, int parallel) {
             } else if (pid < 0) {
                 fprintf(stderr, "An error has occurred\n");
             }
+        } else {
+            // Execute the command in the foreground
+            execute_external_command(tokens, redirect, output_file);
         }
     }
 }
@@ -238,36 +240,17 @@ int main(int argc, char *argv[]) {
             break; // Exit on EOF
         }
 
-        // Parse the input line into tokens
-        char **tokens = parse_line(line);
-        if (tokens[0] == NULL) {
+        // Split the input line into commands separated by &
+        char *command = strtok(line, "&");
+        while (command != NULL) {
+            char **tokens = parse_line(command);
+            if (tokens[0] != NULL) {
+                // Process the command (parallel if there are more commands)
+                process_command(tokens, command != line);
+            }
             free(tokens);
-            continue; // Skip empty lines
+            command = strtok(NULL, "&");
         }
-
-        // Check for parallel commands (separated by '&')
-        int parallel = 0;
-        for (int i = 0; tokens[i] != NULL; i++) {
-            if (strcmp(tokens[i], "&") == 0) {
-                parallel = 1;
-                tokens[i] = NULL; // Remove the '&' from arguments
-                break;
-            }
-        }
-
-        if (parallel) {
-            // Execute commands in parallel
-            for (int i = 0; tokens[i] != NULL; i++) {
-                char **sub_tokens = parse_line(tokens[i]);
-                process_command(sub_tokens, 1); // Process each command in the background
-                free(sub_tokens);
-            }
-        } else {
-            // Execute a single command
-            process_command(tokens, 0);
-        }
-
-        free(tokens); // Free memory allocated for tokens
     }
 
     free(line); // Free memory allocated for the input line
