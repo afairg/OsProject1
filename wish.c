@@ -185,19 +185,8 @@ void process_command(char **tokens, int parallel) {
                 break;
             }
         }
-        if (parallel) {
-            // Fork a child process for parallel execution
-            pid_t pid = fork();
-            if (pid == 0) {
-                execute_external_command(tokens, redirect, output_file);
-                exit(0);
-            } else if (pid < 0) {
-                fprintf(stderr, "An error has occurred\n");
-            }
-        } else {
-            // Execute the command in the foreground
-            execute_external_command(tokens, redirect, output_file);
-        }
+        execute_external_command(tokens, redirect, output_file);
+        exit(0);
     }
 }
 
